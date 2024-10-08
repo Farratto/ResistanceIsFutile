@@ -44,6 +44,16 @@ SOFTWARE.
 		<script name="CombatManagerBI" file="scripts/manager_combat_bi.lua" />
 
 		<icon name="BlissfulIgnorance_icon" file="graphics/icons/BlissfulIgnorance.png" />
+
+		<script name="PowerUpBI">
+			function onInit()
+				if PowerUp then
+					PowerUp.registerExtension("Blissful Ignorance", "v1.1.6-rc1", {
+                        ['message'] = "v1.1.6-rc1\Added effect: MAKERESIST. Functions same as MAKEVULN"
+                    });
+				end
+			end
+		</script>
 	</base>
 
 	<announcement text="Blissful Ignorance dev_version by MeAndUnique." icon="BlissfulIgnorance_icon" font="emotefont" />

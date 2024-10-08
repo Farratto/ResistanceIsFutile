@@ -81,6 +81,7 @@ function postProcessResistances(rActor, rSource)
 	end
 
 	addExtras(rSource, rActor, "MAKEVULN", addVulnerableDamageType);
+	addExtras(rSource, rActor, "MAKERESIST", addResistantDamageType);
 end
 
 function addExtras(rSource, rActor, sEffect, fAdd, sPrimaryReduction, sSecondaryReduction)
@@ -151,5 +152,14 @@ function addVulnerableDamageType(rActor, sDamageType)
 		mod = 0,
 		aNegatives = {},
 		bAddIfUnresisted = true
+	};
+end
+
+function addResistantDamageType(rActor, sDamageType)
+	local aEffects = rActor.tReductions["RESIST"];
+	aEffects[sDamageType] = {
+		mod = 0,
+		aNegatives = {},
+		bAddIfUnresisted = false
 	};
 end

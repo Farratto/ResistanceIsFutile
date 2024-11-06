@@ -36,5 +36,5 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
-* v1.1.6-rc2: f
+* v1.1.6-rc2: New tag: DMGTYPENEW replaces damage types.
 * v1.1.6-rc1: new modifier tag: MAKERESIST

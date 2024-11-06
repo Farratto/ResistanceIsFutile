@@ -1,5 +1,16 @@
-# Blissful Ignorance
-A Fantasy Grounds extension that adds effects for extra functionality around damage resistance and immunity.
+## Blissful Ignorance
+
+**Current Version**: ~dev_version~ \
+**Updated**: ~date~
+
+This extension that adds effects for extra functionality around damage resistance and immunity.
+
+### Installation
+
+You can find the source code at Farratto's [GitHub](https://github.com/Farratto/BlissfulIgnorance/releases). \
+You can ask questions at the [Fantasy Grounds Forum](https://www.fantasygrounds.com/forums/showthread.php?71891-5E-Blissful-Ignorance).
+
+### Details
 
 The following targetable Effects have been added:
 * **ABSORB: (n), types** - When the target takes damage from one of the provided damage types, they instead are healed for n times the damage. n is optional and defaults to 1. e.g. "ABSORB: lightning" may be used for a shambling mound.
@@ -13,13 +24,17 @@ The following targetable Effects have been added:
 * **DMGEDMULT: n** - The bearer of this effect has all of their damage taken multiplied by n.
 * **HEALMULT: n** - The bearer of this effect has all of their healing done multiplied by n.
 * **HEALEDMULT: n, (types)** - The bearer of this effect has all of their healing received multiplied by n. types is optional and may be any combination of "heal", "hitdice", and "rest", separated by commas. If types is not provided, then all types of healing are multiplied.
+* **DMGTYPENEW: types** - Damage will be of the specified type(s), all other damage types are removed.
 
-## Installation
-Download [BlissfulIgnorance.ext](https://github.com/Farratto/BlissfulIgnorance/releases) and place in the extensions subfolder of the Fantasy Grounds data folder.
+### Attribution
 
-## Attribution
-SmiteWorks owns rights to code sections copied from their rulesets by permission for Fantasy Grounds community development.
-'Fantasy Grounds' is a trademark of SmiteWorks USA, LLC.
+SmiteWorks owns rights to code sections copied from their rulesets by permission for Fantasy Grounds community development. \
+'Fantasy Grounds' is a trademark of SmiteWorks USA, LLC. \
 'Fantasy Grounds' is Copyright 2004-2021 SmiteWorks USA LLC.
 
 <a href="https://www.vecteezy.com/">Vectors by Vecteezy</a>
+
+### Change Log
+
+* v1.1.6-rc2: f
+* v1.1.6-rc1: new modifier tag: MAKERESIST

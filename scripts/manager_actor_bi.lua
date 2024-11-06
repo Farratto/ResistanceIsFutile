@@ -1,7 +1,9 @@
---
--- Please see the license.txt file included with this distribution for
+-- Please see the LICENSE.txt file included with this distribution for
 -- attribution and copyright information.
---
+
+-- luacheck: globals getDamageVulnerabilities getDamageResistances getDamageImmunities postProcessResistances
+-- luacheck: globals addExtras addIgnoredDamageType ignoreReduction addDemotedDamagedType demoteReduction
+-- luacheck: globals getDemotedEffect addVulnerableDamageType addResistantDamageType
 
 local getDamageVulnerabilitiesOriginal;
 local getDamageResistancesOriginal;

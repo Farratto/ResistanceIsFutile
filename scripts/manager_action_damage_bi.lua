@@ -1,13 +1,17 @@
---
--- Please see the license.txt file included with this distribution for
+-- Please see the LICENSE.txt file included with this distribution for
 -- attribution and copyright information.
---
+
+-- luacheck: globals setActiveTarget clearActiveTarget checkReductionTypeHelper checkNumericalReductionTypeHelper
+-- luacheck: globals getDamageAdjust multiplyDamage applyDamage messageDamage
+-- luacheck: globals applyDmgTypeEffectsToModRollBI applyTargetedDmgTypeEffectsToDamageOutputBI
 
 local checkReductionTypeHelperOriginal;
 local checkNumericalReductionTypeHelperOriginal;
 local getDamageAdjustOriginal;
 local applyDamageOriginal;
 local messageDamageOriginal;
+local applyDmgTypeEffectsToModRollOriginal
+local applyTargetedDmgTypeEffectsToDamageOutputOriginal
 
 local rActiveTarget;
 local bAdjusted = false;
@@ -30,8 +34,143 @@ function onInit()
 	messageDamageOriginal = ActionDamage.messageDamage;
 	ActionDamage.messageDamage = messageDamage;
 
-	if EffectsManagerBCEDND then
-		EffectsManagerBCEDND.processAbsorb = function() end;
+	applyDmgTypeEffectsToModRollOriginal = ActionDamage.applyDmgTypeEffectsToModRoll
+	ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollBI
+	applyTargetedDmgTypeEffectsToDamageOutputOriginal = ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput
+	ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputBI
+
+	if EffectsManagerBCEDND then --luacheck: ignore 113
+		EffectsManagerBCEDND.processAbsorb = function() end; --luacheck: ignore 112
+	end
+end
+
+function onClose()
+	ActionDamage.checkReductionTypeHelper = checkReductionTypeHelperOriginal
+	ActionDamage.checkNumericalReductionTypeHelper = checkNumericalReductionTypeHelperOriginal
+	ActionDamage.getDamageAdjust = getDamageAdjustOriginal
+	ActionDamage.applyDamage = applyDamageOriginal
+	ActionDamage.messageDamage = messageDamageOriginal
+	ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollOriginal
+	ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputOriginal
+end
+
+function applyDmgTypeEffectsToModRollBI(rRoll, rSource, rTarget)
+	local tDmgTypesNew = {};
+	local tDmgTypesNewEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPENEW", nil, rTarget);
+	for _,rEffectComp in ipairs(tDmgTypesNewEffects) do
+		tDmgTypesNew = {};
+		for _,v in ipairs(rEffectComp.remainder) do
+			local tSplitDmgTypes = StringManager.split(v, ",", true);
+			for _,v2 in ipairs(tSplitDmgTypes) do
+				table.insert(tDmgTypesNew, v2);
+			end
+		end
+	end
+		Debug.console("rRoll.clauses.dmgtype = " .. tostring(rRoll.clauses.dmgtype))
+		for k,v in pairs(rRoll.clauses) do
+			Debug.console("key = " .. tostring(k) ..".  value = " .. tostring(v))
+		end
+	if #tDmgTypesNew > 0 then
+		for _,rClause in ipairs(rRoll.clauses) do
+			rClause.dmgtype = ''
+			for _,v in ipairs(tDmgTypesNew) do
+				if rClause.dmgtype ~= "" then
+					rClause.dmgtype = rClause.dmgtype .. "," .. v;
+				else
+					rClause.dmgtype = v;
+				end
+			end
+		end
+		table.insert(rRoll.tNotifications, EffectManager.buildEffectOutput(table.concat(tDmgTypesNew, ",")));
+		return
+	end
+
+	local tAddDmgTypes = {};
+	local tDmgTypeEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPE", nil, rTarget);
+	for _,rEffectComp in ipairs(tDmgTypeEffects) do
+		for _,v in ipairs(rEffectComp.remainder) do
+			local tSplitDmgTypes = StringManager.split(v, ",", true);
+			for _,v2 in ipairs(tSplitDmgTypes) do
+				table.insert(tAddDmgTypes, v2);
+			end
+		end
+	end
+	if #tAddDmgTypes > 0 then
+		for _,rClause in ipairs(rRoll.clauses) do
+			local tSplitDmgTypes = StringManager.split(rClause.dmgtype, ",", true);
+			for _,v in ipairs(tAddDmgTypes) do
+				if not StringManager.contains(tSplitDmgTypes, v) then
+					if rClause.dmgtype ~= "" then
+						rClause.dmgtype = rClause.dmgtype .. "," .. v;
+					else
+						rClause.dmgtype = v;
+					end
+				end
+			end
+		end
+		table.insert(rRoll.tNotifications, EffectManager.buildEffectOutput(table.concat(tAddDmgTypes, ",")));
+	end
+end
+function applyTargetedDmgTypeEffectsToDamageOutputBI(rDamageOutput, rSource, rTarget)
+	local tDmgTypesNew = {};
+	local tDmgTypesNewEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPENEW", nil, rTarget, true);
+	for _,rEffectComp in ipairs(tDmgTypesNewEffects) do
+		tDmgTypesNew = {};
+		for _,v in ipairs(rEffectComp.remainder) do
+			local tSplitDmgTypes = StringManager.split(v, ",", true);
+			for _,v2 in ipairs(tSplitDmgTypes) do
+				table.insert(tDmgTypesNew, v2);
+			end
+		end
+	end
+	if #tDmgTypesNew > 0 then
+		local tNewDmgTypes = {};
+		rDamageOutput.aDamageTypes = {}
+		for k,v in pairs(rDamageOutput.aDamageTypes) do
+			--local tSplitDmgTypes = StringManager.split(k, ",", true);
+			for _,v2 in ipairs(tDmgTypesNew) do
+				--if not StringManager.contains(tSplitDmgTypes, v2) then
+					if k ~= "" then
+						k = k .. "," .. v2;
+					else
+						k = v2;
+					end
+				--end
+			end
+			tNewDmgTypes[k] = v;
+		end
+		rDamageOutput.aDamageTypes = tNewDmgTypes;
+		table.insert(rDamageOutput.tNotifications, EffectManager.buildEffectOutput(table.concat(tDmgTypesNew, ",")));
+		return
+	end
+
+	local tAddDmgTypes = {};
+	local tDmgTypeEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPE", nil, rTarget, true);
+	for _,rEffectComp in ipairs(tDmgTypeEffects) do
+		for _,v in ipairs(rEffectComp.remainder) do
+			local tSplitDmgTypes = StringManager.split(v, ",", true);
+			for _,v2 in ipairs(tSplitDmgTypes) do
+				table.insert(tAddDmgTypes, v2);
+			end
+		end
+	end
+	if #tAddDmgTypes > 0 then
+		local tNewDmgTypes = {};
+		for k,v in pairs(rDamageOutput.aDamageTypes) do
+			local tSplitDmgTypes = StringManager.split(k, ",", true);
+			for _,v2 in ipairs(tAddDmgTypes) do
+				if not StringManager.contains(tSplitDmgTypes, v2) then
+					if k ~= "" then
+						k = k .. "," .. v2;
+					else
+						k = v2;
+					end
+				end
+			end
+			tNewDmgTypes[k] = v;
+		end
+		rDamageOutput.aDamageTypes = tNewDmgTypes;
+		table.insert(rDamageOutput.tNotifications, EffectManager.buildEffectOutput(table.concat(tAddDmgTypes, ",")));
 	end
 end
 

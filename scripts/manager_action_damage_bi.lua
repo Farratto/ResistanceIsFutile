@@ -66,10 +66,6 @@ function applyDmgTypeEffectsToModRollBI(rRoll, rSource, rTarget)
 			end
 		end
 	end
-		Debug.console("rRoll.clauses.dmgtype = " .. tostring(rRoll.clauses.dmgtype))
-		for k,v in pairs(rRoll.clauses) do
-			Debug.console("key = " .. tostring(k) ..".  value = " .. tostring(v))
-		end
 	if #tDmgTypesNew > 0 then
 		for _,rClause in ipairs(rRoll.clauses) do
 			rClause.dmgtype = ''
@@ -195,7 +191,7 @@ function checkReductionTypeHelper(rMatch, aDmgType)
 	end
 
 	if result then
-		if ActionDamage.checkNumericalReductionType(rActiveTarget.tReductions["ABSORB"], aDmgType) ~= 0 then
+		if rActiveTarget and ActionDamage.checkNumericalReductionType(rActiveTarget.tReductions["ABSORB"], aDmgType) ~= 0 then
 			result = false;
 		elseif rMatch.aIgnored then
 			for _,sIgnored in pairs(rMatch.aIgnored) do
@@ -210,17 +206,25 @@ function checkReductionTypeHelper(rMatch, aDmgType)
 			result = false;
 		elseif rMatch.bAddIfUnresisted then
 			bPreventCalculateRecursion = true;
-			result = not ActionDamage.checkReductionType(rActiveTarget.tReductions["RESIST"], aDmgType) and
-				not ActionDamage.checkReductionType(rActiveTarget.tReductions["IMMUNE"], aDmgType) and
-				not ActionDamage.checkReductionType(rActiveTarget.tReductions["ABSORB"], aDmgType);
+			if rActiveTarget then
+				result = not ActionDamage.checkReductionType(rActiveTarget.tReductions["RESIST"], aDmgType) and
+					not ActionDamage.checkReductionType(rActiveTarget.tReductions["IMMUNE"], aDmgType) and
+					not ActionDamage.checkReductionType(rActiveTarget.tReductions["ABSORB"], aDmgType);
+			else
+				result = true;
+			end
 			bPreventCalculateRecursion = false;
 		end
 	elseif rMatch and (rMatch.mod ~= 0) then
 		if rMatch.sDemotedFrom then
-			local aMatches = rActiveTarget.tReductions[rMatch.sDemotedFrom];
-			bPreventCalculateRecursion = true;
-			result = ActionDamage.checkReductionType(aMatches, aDmgType) or
-				ActionDamage.checkNumericalReductionType(aMatches, aDmgType) ~= 0;
+			if rActiveTarget then
+				local aMatches = rActiveTarget.tReductions[rMatch.sDemotedFrom];
+				bPreventCalculateRecursion = true;
+				result = ActionDamage.checkReductionType(aMatches, aDmgType) or
+					ActionDamage.checkNumericalReductionType(aMatches, aDmgType) ~= 0;
+			else
+				result = false;
+			end
 			bPreventCalculateRecursion = false;
 		end
 	end

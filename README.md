@@ -36,5 +36,6 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
+* v1.1.6-rc3: Rare Bug Error Protection. Compressed icon.
 * v1.1.6-rc2: New tag: DMGTYPENEW replaces damage types.
 * v1.1.6-rc1: new modifier tag: MAKERESIST

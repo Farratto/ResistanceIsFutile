@@ -22,6 +22,7 @@ end
 
 function getDamageVulnerabilities(rActor, rSource)
 	local aVuln =  getDamageVulnerabilitiesOriginal(rActor, rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["VULN"] = aVuln;
 	addExtras(rSource, rActor, "IGNOREVULN", addIgnoredDamageType, "VULN");
 	return aVuln;
@@ -29,6 +30,7 @@ end
 
 function getDamageResistances(rActor, rSource)
 	local aResist = getDamageResistancesOriginal(rActor, rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["RESIST"] = aResist;
 	addExtras(rSource, rActor, "IGNORERESIST", addIgnoredDamageType, "RESIST");
 	return aResist;
@@ -36,6 +38,7 @@ end
 
 function getDamageImmunities(rActor, rSource)
 	local aImmune = getDamageImmunitiesOriginal(rActor, rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["IMMUNE"] = aImmune;
 	addExtras(rSource, rActor, "IGNOREIMMUNE", addIgnoredDamageType, "IMMUNE");
 
@@ -56,6 +59,7 @@ end
 
 function postProcessResistances(rActor, rSource)
 	local tAbsorb = ActorManager5E.getDamageVulnResistImmuneEffectHelper(rActor, "ABSORB", rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["ABSORB"] = tAbsorb;
 	for _,rAbsorb in pairs(tAbsorb) do
 		if rAbsorb.mod == 0 then

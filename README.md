@@ -20,10 +20,10 @@ The following targetable Effects have been added:
 * **MAKERESIST: types** - Functions the same as MAKEVULN.
 * **REDUCE: n, types** - This functions exactly as RESIST: n, except it will also stack with normal resistance.
 * **UNHEALABLE: (types)** - The bearer of this effect cannot benefit from any healing of the associated types. types is optional and may be any combination of "heal", "hitdice", and "rest", separated by commas. If types is not provided, then all types of healing are prevented.
-* **DMGMULT: n** - The bearer of this effect has all of their damage dealt multiplied by n.
-* **DMGEDMULT: n** - The bearer of this effect has all of their damage taken multiplied by n.
-* **HEALMULT: n** - The bearer of this effect has all of their healing done multiplied by n.
-* **HEALEDMULT: n, (types)** - The bearer of this effect has all of their healing received multiplied by n. types is optional and may be any combination of "heal", "hitdice", and "rest", separated by commas. If types is not provided, then all types of healing are multiplied.
+* **DMGMULT: n** - The bearer of this effect has all of their damage dealt multiplied by n. If n is negative, damage will heal instead.
+* **DMGEDMULT: n** - The bearer of this effect has all of their damage taken multiplied by n. If n is negative, damage will heal instead.
+* **HEALMULT: n (types)** - The bearer of this effect has all of their healing done multiplied by n. If n is negative, healing will damage instead. In this case, you may optionally specify damage types separated by a comma.
+* **HEALEDMULT: n, (types)** - The bearer of this effect has all of their healing received multiplied by n. types is optional and may be any combination of "heal", "hitdice", and "rest", separated by commas. If types is not provided, then all types of healing are multiplied. If n is negative, healing will damage instead. In this case, you may optionally specify damage types separated by a comma.
 * **DMGTYPENEW: types** - Damage will be of the specified type(s), all other damage types are removed.
 
 ### Attribution
@@ -36,6 +36,7 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
+* v1.1.6-rc5: Support for negative n on DMGMULT DMGEDMULT HEALMULT HEALEDMULT
 * v1.1.6-rc4: Increased compatibility with other Extensions.
 * v1.1.6-rc3: Rare Bug Error Protection. Compressed icon.
 * v1.1.6-rc2: New tag: DMGTYPENEW replaces damage types.

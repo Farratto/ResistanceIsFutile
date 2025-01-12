@@ -342,8 +342,11 @@ function multiplyDamage(rSource, rTarget, rDamageOutput)
 	table.insert(rDamageOutput.tNotifications, "[MULTIPLIED: " .. nMult .. "]");
 
 	local nCarry = 0;
+	local nNegMult = 1;
+	if nMult < 0 then nNegMult = -1 end
+	local nMultAbs = math.abs(nMult);
 	for kType, nType in pairs(rDamageOutput.aDamageTypes) do
-		local nAdjusted = nType * nMult;
+		local nAdjusted = nType * nMultAbs;
 		nCarry = nCarry + nAdjusted % 1;
 		if nCarry >= 1 then
 			nAdjusted = nAdjusted + 1;
@@ -351,7 +354,9 @@ function multiplyDamage(rSource, rTarget, rDamageOutput)
 		end
 		rDamageOutput.aDamageTypes[kType] = math.floor(nAdjusted);
 	end
-	rDamageOutput.nVal = math.max(math.floor(rDamageOutput.nVal * nMult), 1);
+	local nValMax = math.max(math.floor(rDamageOutput.nVal * nMultAbs), 1);
+	rDamageOutput.nVal = nValMax * nNegMult;
+	--rDamageOutput.nVal = math.max(math.floor(rDamageOutput.nVal * nMult), 1);
 end
 
 function applyDamage(rSource, rTarget, rRoll)
@@ -369,19 +374,66 @@ function applyDamage(rSource, rTarget, rRoll)
 		else
 			local nMult = 1;
 			local bRateEffect = false;
+			local bHeal2Dmg;
+			local sAbsorbed;
 			for _,rEffect in ipairs(EffectManager5E.getEffectsByType(rSource, "HEALMULT", {sType}, rTarget)) do
+				if rEffect.mod < 0 then
+					bHeal2Dmg = true;
+					rEffect.mod = math.abs(rEffect.mod);
+					local sRemainder = ''
+					for _,remainder in ipairs(rEffect.remainder) do
+						if sRemainder == '' then
+							sRemainder = string.lower(remainder);
+						else
+							sRemainder = sRemainder..','..string.lower(remainder);
+						end
+					end
+					if sRemainder == '' then sRemainder = 'untyped' end
+					rRoll.sDesc = string.gsub(rRoll.sDesc, '%[HEAL%]', '[DAMAGE]');
+					local sTypeDesc = '[TYPE: '..sRemainder..' ('..tostring(rRoll.nTotal)..'='..tostring(rRoll.nTotal)..')]'
+					rRoll.sDesc = rRoll.sDesc..sTypeDesc;
+					rRoll.healtype = nil;
+					rRoll.sType = 'damage'
+				end
 				nMult = nMult * rEffect.mod;
 				bRateEffect = true;
 			end
 			for _,rEffect in ipairs(EffectManager5E.getEffectsByType(rTarget, "HEALEDMULT", {sType}, rSource)) do
+				sAbsorbed = string.match(rRoll.sDesc, "%[ABSORBED: [^%]]+%]");
+				if rEffect.mod < 0 and not sAbsorbed then
+					bHeal2Dmg = true;
+					rEffect.mod = math.abs(rEffect.mod);
+					local sRemainder = ''
+					for _,remainder in ipairs(rEffect.remainder) do
+						if sRemainder == '' then
+							sRemainder = string.lower(remainder);
+						else
+							sRemainder = sRemainder..','..string.lower(remainder);
+						end
+					end
+					if sRemainder == '' then sRemainder = 'untyped' end
+					rRoll.sDesc = string.gsub(rRoll.sDesc, '%[HEAL%]', '[DAMAGE]');
+					local sTypeDesc = '[TYPE: '..sRemainder..' ('..tostring(rRoll.nTotal)..'='..tostring(rRoll.nTotal)..')]'
+					rRoll.sDesc = rRoll.sDesc..sTypeDesc;
+					rRoll.healtype = nil;
+					rRoll.sType = 'damage'
+				end
 				nMult = nMult * rEffect.mod;
 				bRateEffect = true;
 			end
 			if bRateEffect then
-				rRoll.nTotal = math.floor(rRoll.nTotal * nMult);
-				rRoll.sDesc = rRoll.sDesc .. "[MULTIPLIED: " .. nMult .."]";
+				if not sAbsorbed then
+					rRoll.nTotal = math.floor(rRoll.nTotal * nMult);
+					if nMult ~= 1 then rRoll.sDesc = rRoll.sDesc .. "[MULTIPLIED: " .. nMult .."]" end
+					if bHeal2Dmg then rRoll.sDesc = rRoll.sDesc.."[CONVHEAL2DMG]" end
+				end
 			end
 		end
+	end
+
+	--Debug.console("rRoll.sDesc = "..tostring(rRoll.sDesc));
+	for k,v in pairs(rRoll) do
+		Debug.console('rRoll.k = '..tostring(k)..'. rRoll.v = '..tostring(v));
 	end
 
 	applyDamageOriginal(rSource, rTarget, rRoll);

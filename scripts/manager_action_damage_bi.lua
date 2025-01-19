@@ -431,11 +431,6 @@ function applyDamage(rSource, rTarget, rRoll)
 		end
 	end
 
-	--Debug.console("rRoll.sDesc = "..tostring(rRoll.sDesc));
-	for k,v in pairs(rRoll) do
-		Debug.console('rRoll.k = '..tostring(k)..'. rRoll.v = '..tostring(v));
-	end
-
 	applyDamageOriginal(rSource, rTarget, rRoll);
 end
 

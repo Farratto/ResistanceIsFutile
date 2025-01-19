@@ -36,6 +36,7 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
+* v1.1.6-rc6: Console log spamming. FIXED.
 * v1.1.6-rc5: Support for negative n on DMGMULT DMGEDMULT HEALMULT HEALEDMULT
 * v1.1.6-rc4: Increased compatibility with other Extensions.
 * v1.1.6-rc3: Rare Bug Error Protection. Compressed icon.

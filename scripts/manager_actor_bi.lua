@@ -1,7 +1,9 @@
---
--- Please see the license.txt file included with this distribution for
+-- Please see the LICENSE.txt file included with this distribution for
 -- attribution and copyright information.
---
+
+-- luacheck: globals getDamageVulnerabilities getDamageResistances getDamageImmunities postProcessResistances
+-- luacheck: globals addExtras addIgnoredDamageType ignoreReduction addDemotedDamagedType demoteReduction
+-- luacheck: globals getDemotedEffect addVulnerableDamageType addResistantDamageType
 
 local getDamageVulnerabilitiesOriginal;
 local getDamageResistancesOriginal;
@@ -20,6 +22,7 @@ end
 
 function getDamageVulnerabilities(rActor, rSource)
 	local aVuln =  getDamageVulnerabilitiesOriginal(rActor, rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["VULN"] = aVuln;
 	addExtras(rSource, rActor, "IGNOREVULN", addIgnoredDamageType, "VULN");
 	return aVuln;
@@ -27,6 +30,7 @@ end
 
 function getDamageResistances(rActor, rSource)
 	local aResist = getDamageResistancesOriginal(rActor, rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["RESIST"] = aResist;
 	addExtras(rSource, rActor, "IGNORERESIST", addIgnoredDamageType, "RESIST");
 	return aResist;
@@ -34,6 +38,7 @@ end
 
 function getDamageImmunities(rActor, rSource)
 	local aImmune = getDamageImmunitiesOriginal(rActor, rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["IMMUNE"] = aImmune;
 	addExtras(rSource, rActor, "IGNOREIMMUNE", addIgnoredDamageType, "IMMUNE");
 
@@ -54,6 +59,7 @@ end
 
 function postProcessResistances(rActor, rSource)
 	local tAbsorb = ActorManager5E.getDamageVulnResistImmuneEffectHelper(rActor, "ABSORB", rSource);
+	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["ABSORB"] = tAbsorb;
 	for _,rAbsorb in pairs(tAbsorb) do
 		if rAbsorb.mod == 0 then
@@ -81,6 +87,7 @@ function postProcessResistances(rActor, rSource)
 	end
 
 	addExtras(rSource, rActor, "MAKEVULN", addVulnerableDamageType);
+	addExtras(rSource, rActor, "MAKERESIST", addResistantDamageType);
 end
 
 function addExtras(rSource, rActor, sEffect, fAdd, sPrimaryReduction, sSecondaryReduction)
@@ -151,5 +158,14 @@ function addVulnerableDamageType(rActor, sDamageType)
 		mod = 0,
 		aNegatives = {},
 		bAddIfUnresisted = true
+	};
+end
+
+function addResistantDamageType(rActor, sDamageType)
+	local aEffects = rActor.tReductions["RESIST"];
+	aEffects[sDamageType] = {
+		mod = 0,
+		aNegatives = {},
+		bAddIfUnresisted = false
 	};
 end

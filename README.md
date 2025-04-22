@@ -1,6 +1,6 @@
 ## Resistance is Futile
 
-**Current Version**: ~dev_version~ \
+**Current Version**: ~v-dev~ \
 **Updated**: ~date~
 
 This extension adds effects for extra functionality around damage resistance and immunity.
@@ -36,6 +36,7 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
+* v1.1.8: removed DMGTYPENEW rendered obsolete by DMGBASETYPE
 * v1.1.7: Rebranding to Resistance is Futile.
 * v1.1.6-rc6: Console log spamming. FIXED.
 * v1.1.6-rc5: Support for negative n on DMGMULT DMGEDMULT HEALMULT HEALEDMULT

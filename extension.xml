@@ -4,11 +4,11 @@
 	attribution and copyright information.
 -->
 <root release="3.0" version="3">
-	<announcement text="Resistance is Futile ~dev_version~ by MeAndUnique, Farratto, rhagelstrom." icon="ResistanceIsFutile_icon" font="emotefont" />
+	<announcement text="Resistance is Futile ~v1.1.8-dev~ by MeAndUnique, Farratto, rhagelstrom." icon="ResistanceIsFutile_icon" font="emotefont" />
 	<properties>
 		<loadorder>251</loadorder>
 		<name>Feature: Resistance is Futile</name>
-		<version>~dev_version~</version>
+		<version>~v-dev~</version>
 		<author>MeAndUnique</author>
 		<description>Adds effects for extra functionality around damage resistance and immunity.</description>
 		<ruleset>
@@ -24,8 +24,8 @@
 		<script name="PowerUpBI">
 			function onInit()
 				if PowerUp then
-					PowerUp.registerExtension("Resistance is Futile", "~dev_version~", {
-						['message'] = "~dev_version~\~notes~"
+					PowerUp.registerExtension("Resistance is Futile", "~v-dev~", {
+						['message'] = "~v-dev~: ~notes~"
 					});
 				end
 			end

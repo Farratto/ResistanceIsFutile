@@ -10,8 +10,9 @@ local checkNumericalReductionTypeHelperOriginal;
 local getDamageAdjustOriginal;
 local applyDamageOriginal;
 local messageDamageOriginal;
-local applyDmgTypeEffectsToModRollOriginal
-local applyTargetedDmgTypeEffectsToDamageOutputOriginal
+-- rendered obsolete by DMGBASETYPE
+--local applyDmgTypeEffectsToModRollOriginal
+--local applyTargetedDmgTypeEffectsToDamageOutputOriginal
 
 local rActiveTarget;
 local bAdjusted = false;
@@ -34,10 +35,11 @@ function onInit()
 	messageDamageOriginal = ActionDamage.messageDamage;
 	ActionDamage.messageDamage = messageDamage;
 
+	--[[ rendered obsolete by DMGBASETYPE
 	applyDmgTypeEffectsToModRollOriginal = ActionDamage.applyDmgTypeEffectsToModRoll
 	ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollBI
 	applyTargetedDmgTypeEffectsToDamageOutputOriginal = ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput
-	ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputBI
+	ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputBI]]
 
 	if EffectsManagerBCEDND then --luacheck: ignore 113
 		EffectsManagerBCEDND.processAbsorb = function() end; --luacheck: ignore 112
@@ -50,12 +52,13 @@ function onClose()
 	ActionDamage.getDamageAdjust = getDamageAdjustOriginal
 	ActionDamage.applyDamage = applyDamageOriginal
 	ActionDamage.messageDamage = messageDamageOriginal
-	ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollOriginal
-	ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputOriginal
+	-- rendered obsolete by DMGBASETYPE
+	--ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollOriginal
+	--ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputOriginal]]
 end
 
+-- rendered obsolete by DMGBASETYPE
 function applyDmgTypeEffectsToModRollBI(rRoll, rSource, rTarget)
---[[  Rendered obsolete by DMGBASETYPE
 	local tDmgTypesNew = {};
 	local tDmgTypesNewEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPENEW", nil, rTarget);
 	for _,rEffectComp in ipairs(tDmgTypesNewEffects) do
@@ -81,7 +84,7 @@ function applyDmgTypeEffectsToModRollBI(rRoll, rSource, rTarget)
 		table.insert(rRoll.tNotifications, EffectManager.buildEffectOutput(table.concat(tDmgTypesNew, ",")));
 		return
 	end
-]]
+
 	local tAddDmgTypes = {};
 	local tDmgTypeEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPE", nil, rTarget);
 	for _,rEffectComp in ipairs(tDmgTypeEffects) do
@@ -108,6 +111,7 @@ function applyDmgTypeEffectsToModRollBI(rRoll, rSource, rTarget)
 		table.insert(rRoll.tNotifications, EffectManager.buildEffectOutput(table.concat(tAddDmgTypes, ",")));
 	end
 end
+-- rendered obsolete by DMGBASETYPE
 function applyTargetedDmgTypeEffectsToDamageOutputBI(rDamageOutput, rSource, rTarget)
 	local tDmgTypesNew = {};
 	local tDmgTypesNewEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPENEW", nil, rTarget, true);
@@ -185,8 +189,8 @@ function clearActiveTarget()
 	rActiveTarget = nil;
 end
 
-function checkReductionTypeHelper(rMatch, aDmgType)
-	local result = checkReductionTypeHelperOriginal(rMatch, aDmgType);
+function checkReductionTypeHelper(rMatch, aDmgType, ...)
+	local result = checkReductionTypeHelperOriginal(rMatch, aDmgType, ...);
 	if bPreventCalculateRecursion then
 		return result;
 	end
@@ -233,7 +237,7 @@ function checkReductionTypeHelper(rMatch, aDmgType)
 	return result;
 end
 
-function checkNumericalReductionTypeHelper(rMatch, aDmgType, nLimit)
+function checkNumericalReductionTypeHelper(rMatch, aDmgType, nLimit, ...)
 	local nMod;
 	local aNegatives;
 	if rMatch and rMatch.nReduceMod then
@@ -242,7 +246,7 @@ function checkNumericalReductionTypeHelper(rMatch, aDmgType, nLimit)
 		rMatch.mod = rMatch.nReduceMod;
 		rMatch.aNegatives = rMatch.aReduceNegatives;
 	end
-	local result = checkNumericalReductionTypeHelperOriginal(rMatch, aDmgType, nLimit);
+	local result = checkNumericalReductionTypeHelperOriginal(rMatch, aDmgType, nLimit, ...);
 	if nMod then
 		rMatch.nReduceMod = rMatch.mod;
 		rMatch.aReduceNegatives = rMatch.aNegatives;
@@ -274,11 +278,11 @@ function checkNumericalReductionTypeHelper(rMatch, aDmgType, nLimit)
 	return result;
 end
 
-function getDamageAdjust(rSource, rTarget, _, rDamageOutput)
+function getDamageAdjust(rSource, rTarget, _, rDamageOutput, ...)
 	setActiveTarget(rTarget);
 	multiplyDamage(rSource, rTarget, rDamageOutput);
 
-	local nDamageAdjust, bVulnerable, bResist = getDamageAdjustOriginal(rSource, rTarget, rDamageOutput.nVal, rDamageOutput);
+	local nDamageAdjust, bVulnerable, bResist, tAdjResults = getDamageAdjustOriginal(rSource, rTarget, rDamageOutput.nVal, rDamageOutput, ...);
 
 	local tUniqueTypes = {};
 	for k, v in pairs(rDamageOutput.aDamageTypes) do
@@ -322,7 +326,7 @@ function getDamageAdjust(rSource, rTarget, _, rDamageOutput)
 	end
 
 	clearActiveTarget();
-	return nDamageAdjust, bVulnerable, bResist;
+	return nDamageAdjust, bVulnerable, bResist, tAdjResults;
 end
 
 function multiplyDamage(rSource, rTarget, rDamageOutput)
@@ -360,7 +364,7 @@ function multiplyDamage(rSource, rTarget, rDamageOutput)
 	--rDamageOutput.nVal = math.max(math.floor(rDamageOutput.nVal * nMult), 1);
 end
 
-function applyDamage(rSource, rTarget, rRoll)
+function applyDamage(rSource, rTarget, rRoll, ...)
 	if string.match(rRoll.sDesc, "%[RECOVERY")
 	or string.match(rRoll.sDesc, "%[HEAL")
 	or rRoll.nTotal < 0 then
@@ -432,10 +436,10 @@ function applyDamage(rSource, rTarget, rRoll)
 		end
 	end
 
-	applyDamageOriginal(rSource, rTarget, rRoll);
+	applyDamageOriginal(rSource, rTarget, rRoll, ...);
 end
 
-function messageDamage(rSource, rTarget, vRollOrSecret, sDamageText, sDamageDesc, sTotal, sExtraResult)
+function messageDamage(rSource, rTarget, vRollOrSecret, sDamageText, sDamageDesc, sTotal, sExtraResult, ...)
 	if type(vRollOrSecret) == "table" then
 		local rRoll = vRollOrSecret;
 		if (rTarget.nAbsorbed or 0) < 0 then
@@ -466,5 +470,5 @@ function messageDamage(rSource, rTarget, vRollOrSecret, sDamageText, sDamageDesc
 		end
 	end
 
-	messageDamageOriginal(rSource, rTarget, vRollOrSecret, sDamageText, sDamageDesc, sTotal, sExtraResult);
+	messageDamageOriginal(rSource, rTarget, vRollOrSecret, sDamageText, sDamageDesc, sTotal, sExtraResult, ...);
 end

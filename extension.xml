@@ -4,7 +4,7 @@
 	attribution and copyright information.
 -->
 <root release="3.0" version="3">
-	<announcement text="Resistance is Futile ~v1.1.8-dev~ by MeAndUnique, Farratto, rhagelstrom." icon="ResistanceIsFutile_icon" font="emotefont" />
+	<announcement text="Resistance is Futile ~v1.1.9-dev~ by MeAndUnique, Farratto, rhagelstrom." icon="ResistanceIsFutile_icon" font="emotefont" />
 	<properties>
 		<loadorder>251</loadorder>
 		<name>Feature: Resistance is Futile</name>

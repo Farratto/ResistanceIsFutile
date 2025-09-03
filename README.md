@@ -36,6 +36,7 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
+* v1.1.9: FIXED: 5E ruleset update on 2025-09-02 introduced error triggered by damage rolls.
 * v1.1.8: removed DMGTYPENEW rendered obsolete by DMGBASETYPE
 * v1.1.7: Rebranding to Resistance is Futile.
 * v1.1.6-rc6: Console log spamming. FIXED.

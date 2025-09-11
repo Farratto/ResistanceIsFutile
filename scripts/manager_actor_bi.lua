@@ -20,24 +20,24 @@ function onInit()
 	ActorManager5E.getDamageImmunities = getDamageImmunities;
 end
 
-function getDamageVulnerabilities(rActor, rSource)
-	local aVuln =  getDamageVulnerabilitiesOriginal(rActor, rSource);
+function getDamageVulnerabilities(rActor, rSource, ...)
+	local aVuln = getDamageVulnerabilitiesOriginal(rActor, rSource, ...);
 	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["VULN"] = aVuln;
 	addExtras(rSource, rActor, "IGNOREVULN", addIgnoredDamageType, "VULN");
 	return aVuln;
 end
 
-function getDamageResistances(rActor, rSource)
-	local aResist = getDamageResistancesOriginal(rActor, rSource);
+function getDamageResistances(rActor, rSource, ...)
+	local aResist = getDamageResistancesOriginal(rActor, rSource, ...);
 	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["RESIST"] = aResist;
 	addExtras(rSource, rActor, "IGNORERESIST", addIgnoredDamageType, "RESIST");
 	return aResist;
 end
 
-function getDamageImmunities(rActor, rSource)
-	local aImmune = getDamageImmunitiesOriginal(rActor, rSource);
+function getDamageImmunities(rActor, rSource, ...)
+	local aImmune = getDamageImmunitiesOriginal(rActor, rSource, ...);
 	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["IMMUNE"] = aImmune;
 	addExtras(rSource, rActor, "IGNOREIMMUNE", addIgnoredDamageType, "IMMUNE");
@@ -57,8 +57,9 @@ function getDamageImmunities(rActor, rSource)
 	return aImmune;
 end
 
-function postProcessResistances(rActor, rSource)
+--[[function postProcessResistances(rActor, rSource)
 	local tAbsorb = ActorManager5E.getDamageVulnResistImmuneEffectHelper(rActor, "ABSORB", rSource);
+	--output tAbsorb[sDmgType][mod and aNegatives]
 	if not rActor.tReductions then rActor.tReductions = {} end
 	rActor.tReductions["ABSORB"] = tAbsorb;
 	for _,rAbsorb in pairs(tAbsorb) do
@@ -77,6 +78,51 @@ function postProcessResistances(rActor, rSource)
 		else
 			rResist.nReduceMod = (rResist.nReduceMod or 0) + rReduce.mod;
 			rResist.aReduceNegatives = rReduce.aNegatives;
+		end
+	end
+
+	for sOriginalType,_ in pairs(rActor.tReductions) do
+		for sNewType,_ in pairs(rActor.tReductions) do
+			addExtras(rSource, rActor, sOriginalType .. "TO" .. sNewType, addDemotedDamagedType, sOriginalType, sNewType);
+		end
+	end
+
+	addExtras(rSource, rActor, "MAKEVULN", addVulnerableDamageType);
+	addExtras(rSource, rActor, "MAKERESIST", addResistantDamageType);
+end]]
+function postProcessResistances(rActor, rSource)
+	local tAbsorb = {};
+	ActorManager5E.helperGetDamageVulnResistImmuneEffect(tAbsorb, 'ABSORB', rActor, rSource);
+	--output tAbsorb[sDmgType][tBasic or tNumeric][integer][nMod and tNegatives]
+	if not rActor.tReductions then rActor.tReductions = {} end
+	rActor.tReductions["ABSORB"] = tAbsorb;
+	for _,rAbsorb in pairs(tAbsorb) do
+		if rAbsorb['tBasic'] then
+			rAbsorb['tNumeric'] = UtilityManager.copyDeep(rAbsorb['tBasic']);
+			rAbsorb['tNumeric'][1]['nMod'] = 1;
+			rAbsorb['tBasic'] = nil;
+		end
+		rAbsorb['tNumeric'][1]['nMod'] = rAbsorb['tNumeric'][1]['nMod'] + 1;
+		rAbsorb.bIsAbsorb = true;
+	end
+
+	local tReduce = {};
+	ActorManager5E.helperGetDamageVulnResistImmuneEffect(tReduce, 'REDUCE', rActor, rSource);
+	for sType,rReduce in pairs(tReduce) do
+		local rResist = rActor.tReductions["RESIST"][sType];
+		if not rResist then
+			rActor.tReductions["RESIST"][sType] = rReduce;
+		else
+			local nModReduce = 0;
+			local tNegsReduce;
+			if rReduce['tNumeric'] then
+				nModReduce = rReduce['tNumeric'][1]['nMod'];
+				tNegsReduce = rReduce['tNumeric'][1]['tNegatives'];
+			else
+				tNegsReduce = rReduce['tBasic'][1]['tNegatives'];
+			end
+			rResist.nReduceMod = (rResist.nReduceMod or 0) + nModReduce;
+			rResist.aReduceNegatives = tNegsReduce;
 		end
 	end
 
@@ -152,7 +198,7 @@ function getDemotedEffect(aDemotedEffects, sDamageType)
 	return rDemoted;
 end
 
-function addVulnerableDamageType(rActor, sDamageType)
+--[[function addVulnerableDamageType(rActor, sDamageType)
 	local aEffects = rActor.tReductions["VULN"];
 	aEffects[sDamageType] = {
 		mod = 0,
@@ -166,6 +212,35 @@ function addResistantDamageType(rActor, sDamageType)
 	aEffects[sDamageType] = {
 		mod = 0,
 		aNegatives = {},
+		bAddIfUnresisted = false
+	};
+end]]
+function addVulnerableDamageType(rActor, sDamageType)
+	local aEffects = rActor.tReductions["VULN"];
+	if not aEffects[sDamageType] then
+		aEffects[sDamageType] = {};
+		aEffects[sDamageType]['tBasic'] = {};
+	elseif aEffects[sDamageType]['tNumeric'] then
+		aEffects[sDamageType]['tBasic'] = UtilityManager.copyDeep(aEffects[sDamageType]['tNumeric']);
+		aEffects[sDamageType]['tNumeric'] = nil;
+	end
+	aEffects[sDamageType]['tBasic'][1] = {
+		tNegatives = {},
+		bAddIfUnresisted = true
+	};
+end
+
+function addResistantDamageType(rActor, sDamageType)
+	local aEffects = rActor.tReductions["RESIST"];
+	if not aEffects[sDamageType] then
+		aEffects[sDamageType] = {};
+		aEffects[sDamageType]['tBasic'] = {};
+	elseif aEffects[sDamageType]['tNumeric'] then
+		aEffects[sDamageType]['tBasic'] = UtilityManager.copyDeep(aEffects[sDamageType]['tNumeric']);
+		aEffects[sDamageType]['tNumeric'] = nil;
+	end
+	aEffects[sDamageType]['tBasic'][1] = {
+		tNegatives = {},
 		bAddIfUnresisted = false
 	};
 end

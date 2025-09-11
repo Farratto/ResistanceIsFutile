@@ -9,7 +9,7 @@ This extension adds effects for extra functionality around damage resistance and
 
 Recommend disable and hide Blissful Ignornance from Fantasy Grounds Forge and delete BlissfulIgnorance.ext from your extensions folder. \
 You can find the source code at Farratto's [GitHub](https://github.com/Farratto/ResistanceIsFutile). \
-You can ask questions at the [Fantasy Grounds Forum](https://www.fantasygrounds.com/forums/showthread.php?84384-5E-Resistance-is-Futile).
+You can ask questions at the [Fantasy Grounds Forum](https://www.fantasygrounds.com/forums/showthread.php?84384).
 
 ### Details
 
@@ -36,6 +36,7 @@ SmiteWorks owns rights to code sections copied from their rulesets by permission
 
 ### Change Log
 
+* v1.1.10: FIXED: several coding tags were broken from v4.7 some time ago.
 * v1.1.9: FIXED: 5E ruleset update on 2025-09-02 introduced error triggered by damage rolls.
 * v1.1.8: removed DMGTYPENEW rendered obsolete by DMGBASETYPE
 * v1.1.7: Rebranding to Resistance is Futile.

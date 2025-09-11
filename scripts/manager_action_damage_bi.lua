@@ -1,18 +1,16 @@
 -- Please see the LICENSE.txt file included with this distribution for
 -- attribution and copyright information.
 
--- luacheck: globals setActiveTarget clearActiveTarget checkReductionTypeHelper checkNumericalReductionTypeHelper
--- luacheck: globals getDamageAdjust multiplyDamage applyDamage messageDamage
--- luacheck: globals applyDmgTypeEffectsToModRollBI applyTargetedDmgTypeEffectsToDamageOutputBI
+--luacheck: globals setActiveTarget clearActiveTarget
+--luacheck: globals getDamageAdjust multiplyDamage applyDamage messageDamage
+--luacheck: globals fhelperCheckBasicReductionType helperCheckBasicReductionTypeRIF
+--luacheck: globals fhelperCheckNumericReductionType helperCheckNumericReductionTypeRIF
 
-local checkReductionTypeHelperOriginal;
-local checkNumericalReductionTypeHelperOriginal;
+--local checkReductionTypeHelperOriginal;
+--local checkNumericalReductionTypeHelperOriginal;
 local getDamageAdjustOriginal;
 local applyDamageOriginal;
 local messageDamageOriginal;
--- rendered obsolete by DMGBASETYPE
---local applyDmgTypeEffectsToModRollOriginal
---local applyTargetedDmgTypeEffectsToDamageOutputOriginal
 
 local rActiveTarget;
 local bAdjusted = false;
@@ -20,11 +18,15 @@ local bIgnored = false;
 local bPreventCalculateRecursion = false;
 
 function onInit()
-	checkReductionTypeHelperOriginal = ActionDamage.checkReductionTypeHelper;
-	ActionDamage.checkReductionTypeHelper = checkReductionTypeHelper;
+	--checkReductionTypeHelperOriginal = ActionDamage.checkReductionTypeHelper;
+	--ActionDamage.checkReductionTypeHelper = checkReductionTypeHelper;
+	fhelperCheckBasicReductionType = ActionDamage.helperCheckBasicReductionType;
+	ActionDamage.helperCheckBasicReductionType = helperCheckBasicReductionTypeRIF;
 
-	checkNumericalReductionTypeHelperOriginal = ActionDamage.checkNumericalReductionTypeHelper;
-	ActionDamage.checkNumericalReductionTypeHelper = checkNumericalReductionTypeHelper;
+	--checkNumericalReductionTypeHelperOriginal = ActionDamage.checkNumericalReductionTypeHelper;
+	--ActionDamage.checkNumericalReductionTypeHelper = checkNumericalReductionTypeHelper;
+	fhelperCheckNumericReductionType = ActionDamage.helperCheckNumericReductionType;
+	ActionDamage.helperCheckNumericReductionType = helperCheckNumericReductionTypeRIF;
 
 	getDamageAdjustOriginal = ActionDamage.getDamageAdjust;
 	ActionDamage.getDamageAdjust = getDamageAdjust;
@@ -35,143 +37,8 @@ function onInit()
 	messageDamageOriginal = ActionDamage.messageDamage;
 	ActionDamage.messageDamage = messageDamage;
 
-	--[[ rendered obsolete by DMGBASETYPE
-	applyDmgTypeEffectsToModRollOriginal = ActionDamage.applyDmgTypeEffectsToModRoll
-	ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollBI
-	applyTargetedDmgTypeEffectsToDamageOutputOriginal = ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput
-	ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputBI]]
-
 	if EffectsManagerBCEDND then --luacheck: ignore 113
 		EffectsManagerBCEDND.processAbsorb = function() end; --luacheck: ignore 112
-	end
-end
-
-function onClose()
-	ActionDamage.checkReductionTypeHelper = checkReductionTypeHelperOriginal
-	ActionDamage.checkNumericalReductionTypeHelper = checkNumericalReductionTypeHelperOriginal
-	ActionDamage.getDamageAdjust = getDamageAdjustOriginal
-	ActionDamage.applyDamage = applyDamageOriginal
-	ActionDamage.messageDamage = messageDamageOriginal
-	-- rendered obsolete by DMGBASETYPE
-	--ActionDamage.applyDmgTypeEffectsToModRoll = applyDmgTypeEffectsToModRollOriginal
-	--ActionDamage.applyTargetedDmgTypeEffectsToDamageOutput = applyTargetedDmgTypeEffectsToDamageOutputOriginal]]
-end
-
--- rendered obsolete by DMGBASETYPE
-function applyDmgTypeEffectsToModRollBI(rRoll, rSource, rTarget)
-	local tDmgTypesNew = {};
-	local tDmgTypesNewEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPENEW", nil, rTarget);
-	for _,rEffectComp in ipairs(tDmgTypesNewEffects) do
-		tDmgTypesNew = {};
-		for _,v in ipairs(rEffectComp.remainder) do
-			local tSplitDmgTypes = StringManager.split(v, ",", true);
-			for _,v2 in ipairs(tSplitDmgTypes) do
-				table.insert(tDmgTypesNew, v2);
-			end
-		end
-	end
-	if #tDmgTypesNew > 0 then
-		for _,rClause in ipairs(rRoll.clauses) do
-			rClause.dmgtype = ''
-			for _,v in ipairs(tDmgTypesNew) do
-				if rClause.dmgtype ~= "" then
-					rClause.dmgtype = rClause.dmgtype .. "," .. v;
-				else
-					rClause.dmgtype = v;
-				end
-			end
-		end
-		table.insert(rRoll.tNotifications, EffectManager.buildEffectOutput(table.concat(tDmgTypesNew, ",")));
-		return
-	end
-
-	local tAddDmgTypes = {};
-	local tDmgTypeEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPE", nil, rTarget);
-	for _,rEffectComp in ipairs(tDmgTypeEffects) do
-		for _,v in ipairs(rEffectComp.remainder) do
-			local tSplitDmgTypes = StringManager.split(v, ",", true);
-			for _,v2 in ipairs(tSplitDmgTypes) do
-				table.insert(tAddDmgTypes, v2);
-			end
-		end
-	end
-	if #tAddDmgTypes > 0 then
-		for _,rClause in ipairs(rRoll.clauses) do
-			local tSplitDmgTypes = StringManager.split(rClause.dmgtype, ",", true);
-			for _,v in ipairs(tAddDmgTypes) do
-				if not StringManager.contains(tSplitDmgTypes, v) then
-					if rClause.dmgtype ~= "" then
-						rClause.dmgtype = rClause.dmgtype .. "," .. v;
-					else
-						rClause.dmgtype = v;
-					end
-				end
-			end
-		end
-		table.insert(rRoll.tNotifications, EffectManager.buildEffectOutput(table.concat(tAddDmgTypes, ",")));
-	end
-end
--- rendered obsolete by DMGBASETYPE
-function applyTargetedDmgTypeEffectsToDamageOutputBI(rDamageOutput, rSource, rTarget)
-	local tDmgTypesNew = {};
-	local tDmgTypesNewEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPENEW", nil, rTarget, true);
-	for _,rEffectComp in ipairs(tDmgTypesNewEffects) do
-		tDmgTypesNew = {};
-		for _,v in ipairs(rEffectComp.remainder) do
-			local tSplitDmgTypes = StringManager.split(v, ",", true);
-			for _,v2 in ipairs(tSplitDmgTypes) do
-				table.insert(tDmgTypesNew, v2);
-			end
-		end
-	end
-	if #tDmgTypesNew > 0 then
-		local tNewDmgTypes = {};
-		rDamageOutput.aDamageTypes = {}
-		for k,v in pairs(rDamageOutput.aDamageTypes) do
-			--local tSplitDmgTypes = StringManager.split(k, ",", true);
-			for _,v2 in ipairs(tDmgTypesNew) do
-				--if not StringManager.contains(tSplitDmgTypes, v2) then
-					if k ~= "" then
-						k = k .. "," .. v2;
-					else
-						k = v2;
-					end
-				--end
-			end
-			tNewDmgTypes[k] = v;
-		end
-		rDamageOutput.aDamageTypes = tNewDmgTypes;
-		table.insert(rDamageOutput.tNotifications, EffectManager.buildEffectOutput(table.concat(tDmgTypesNew, ",")));
-		return
-	end
-
-	local tAddDmgTypes = {};
-	local tDmgTypeEffects = EffectManager5E.getEffectsByType(rSource, "DMGTYPE", nil, rTarget, true);
-	for _,rEffectComp in ipairs(tDmgTypeEffects) do
-		for _,v in ipairs(rEffectComp.remainder) do
-			local tSplitDmgTypes = StringManager.split(v, ",", true);
-			for _,v2 in ipairs(tSplitDmgTypes) do
-				table.insert(tAddDmgTypes, v2);
-			end
-		end
-	end
-	if #tAddDmgTypes > 0 then
-		local tNewDmgTypes = {};
-		for k,v in pairs(rDamageOutput.aDamageTypes) do
-			local tSplitDmgTypes = StringManager.split(k, ",", true);
-			for _,v2 in ipairs(tAddDmgTypes) do
-				if not StringManager.contains(tSplitDmgTypes, v2) then
-					if k ~= "" then
-						k = k .. "," .. v2;
-					else
-						k = v2;
-					end
-				end
-			end
-			tNewDmgTypes[k] = v;
-		end
-		rDamageOutput.aDamageTypes = tNewDmgTypes;
-		table.insert(rDamageOutput.tNotifications, EffectManager.buildEffectOutput(table.concat(tAddDmgTypes, ",")));
 	end
 end
 
@@ -189,6 +56,7 @@ function clearActiveTarget()
 	rActiveTarget = nil;
 end
 
+--[[ DEPRECATED (2025-03)
 function checkReductionTypeHelper(rMatch, aDmgType, ...)
 	local result = checkReductionTypeHelperOriginal(rMatch, aDmgType, ...);
 	if bPreventCalculateRecursion then
@@ -235,8 +103,56 @@ function checkReductionTypeHelper(rMatch, aDmgType, ...)
 	end
 
 	return result;
+end]]
+function helperCheckBasicReductionTypeRIF(rMatch, aDmgType, ...)
+	local result = fhelperCheckBasicReductionType(rMatch, aDmgType, ...);
+	if bPreventCalculateRecursion then
+		return result;
+	end
+
+	if result then
+		if rActiveTarget and ActionDamage.checkNumericReductionType(rActiveTarget.tReductions["ABSORB"], aDmgType) ~= 0 then
+			result = false;
+		elseif rMatch.aIgnored then
+			for _,sIgnored in pairs(rMatch.aIgnored) do
+				if StringManager.contains(aDmgType, sIgnored) then
+					bIgnored = true;
+					result = false;
+					break;
+				end
+			end
+		elseif rMatch.bDemoted then
+			bAdjusted = true;
+			result = false;
+		elseif rMatch.bAddIfUnresisted then
+			bPreventCalculateRecursion = true;
+			if rActiveTarget then
+				result = not ActionDamage.checkBasicReductionType(rActiveTarget.tReductions["RESIST"], aDmgType) and
+					not ActionDamage.checkBasicReductionType(rActiveTarget.tReductions["IMMUNE"], aDmgType) and
+					not ActionDamage.checkBasicReductionType(rActiveTarget.tReductions["ABSORB"], aDmgType);
+			else
+				result = true;
+			end
+			bPreventCalculateRecursion = false;
+		end
+	elseif rMatch then
+		if rMatch.sDemotedFrom then
+			if rActiveTarget then
+				local aMatches = rActiveTarget.tReductions[rMatch.sDemotedFrom];
+				bPreventCalculateRecursion = true;
+				result = ActionDamage.checkBasicReductionType(aMatches, aDmgType) or
+					ActionDamage.checkNumericReductionType(aMatches, aDmgType) ~= 0;
+			else
+				result = false;
+			end
+			bPreventCalculateRecursion = false;
+		end
+	end
+
+	return result;
 end
 
+--[[ DEPRECATED (2025-03)
 function checkNumericalReductionTypeHelper(rMatch, aDmgType, nLimit, ...)
 	local nMod;
 	local aNegatives;
@@ -254,6 +170,62 @@ function checkNumericalReductionTypeHelper(rMatch, aDmgType, nLimit, ...)
 		rMatch.aNegatives = aNegatives;
 	end
 
+
+	if bPreventCalculateRecursion then
+		return result;
+	end
+
+	if result ~= 0 then
+		if rMatch.aIgnored then
+			for _,sIgnored in pairs(rMatch.aIgnored) do
+				if StringManager.contains(aDmgType, sIgnored) then
+					bIgnored = true;
+					result = 0;
+				end
+			end
+		elseif rMatch.bDemoted then
+			bAdjusted = true;
+			result = 0;
+		end
+	end
+	if rMatch and rMatch.bIsAbsorb then
+		rMatch.nApplied = 0;
+	end
+	return result;
+end]]
+function helperCheckNumericReductionTypeRIF(rMatch, aDmgType, nLimit, ...)
+	local nMod;
+	local aNegatives;
+	if rMatch and rMatch.nReduceMod then
+		if rMatch['tNumeric'] then
+			nMod = rMatch['tNumeric'][1]['nMod'];
+			aNegatives = rMatch['tNumeric'][1]['tNegatives'];
+		else
+			nMod = 0;
+			aNegatives = rMatch['tBasic'][1]['tNegatives'];
+			rMatch['tNumeric'] = UtilityManager.copyDeep(rMatch['tBasic']);
+		end
+		rMatch['tNumeric'][1]['nMod'] = rMatch.nReduceMod;
+		rMatch['tNumeric'][1]['tNegatives'] = rMatch.aReduceNegatives;
+	end
+	local result = fhelperCheckNumericReductionType(rMatch, aDmgType, nLimit, ...);
+	if nMod then
+		if rMatch['tNumeric'] then
+			rMatch.nReduceMod = rMatch['tNumeric'][1]['nMod'];
+			rMatch.aReduceNegatives = rMatch['tNumeric'][1]['tNegatives'];
+		else
+			rMatch.nReduceMod = 0;
+			rMatch.aReduceNegatives = rMatch['tBasic'][1]['tNegatives'];
+		end
+		if nMod == 0 then
+			rMatch['tBasic'][1]['tNegatives'] = aNegatives;
+			rMatch['tNumeric'] = nil;
+		else
+			rMatch['tNumeric'][1]['nMod'] = nMod;
+			rMatch['tNumeric'][1]['tNegatives'] = aNegatives;
+			rMatch['tBasic'] = nil;
+		end
+	end
 
 	if bPreventCalculateRecursion then
 		return result;
@@ -295,7 +267,8 @@ function getDamageAdjust(rSource, rTarget, _, rDamageOutput, ...)
 			end
 		end
 
-		local nLocalAbsorb = ActionDamage.checkNumericalReductionType(rTarget.tReductions["ABSORB"], aSrcDmgClauseTypes);
+		--local nLocalAbsorb = ActionDamage.checkNumericalReductionType(rTarget.tReductions["ABSORB"], aSrcDmgClauseTypes);
+		local nLocalAbsorb = ActionDamage.checkNumericReductionType(rTarget.tReductions["ABSORB"], aSrcDmgClauseTypes);
 		if nLocalAbsorb ~= 0 then
 			nDamageAdjust = nDamageAdjust - (v * nLocalAbsorb);
 			for _,sDamageType in ipairs(aSrcDmgClauseTypes) do
